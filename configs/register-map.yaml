@@ -1,0 +1,73 @@
+# Register map of the HDPE pipe extrusion line simulator.
+#
+# Addresses are zero-based PDU addresses (input register 0 = "30001",
+# holding register 0 = "40001" in Modicon notation).
+# 32-bit types use word order ABCD (high word at the lower address) unless
+# word_order: cdab is given. raw = round(value × scale), saturated to the type.
+# Read 32-bit values with a single request so both words come from one tick.
+#
+# Documentation: docs/registers/convention.md
+version: 1
+
+sizes:
+  discrete_inputs: 16 # 14..15 reserved
+
+input_registers: # FC04, read-only
+  - {address: 0,  name: machine_state,        source: machine_state,      type: uint16, scale: 1,   unit: enum, description: "0 STOPPED, 1 HEATING, 2 RUNNING, 3 FAULT"}
+  - {address: 1,  name: extruder_rpm,         source: extruder_rpm,       type: uint16, scale: 10,  unit: rpm}
+  - {address: 2,  name: motor_current,        source: motor_current,      type: uint16, scale: 10,  unit: A}
+  - {address: 3,  name: melt_pressure,        source: melt_pressure,      type: uint16, scale: 10,  unit: bar}
+  - {address: 4,  name: zone1_temp,           source: zone1_temp,         type: uint16, scale: 10,  unit: degC}
+  - {address: 5,  name: zone2_temp,           source: zone2_temp,         type: uint16, scale: 10,  unit: degC}
+  - {address: 6,  name: zone3_temp,           source: zone3_temp,         type: uint16, scale: 10,  unit: degC}
+  - {address: 7,  name: die_temp,             source: die_temp,           type: uint16, scale: 10,  unit: degC}
+  - {address: 8,  name: vacuum,               source: vacuum,             type: uint16, scale: 1,   unit: mbar, description: "below atmosphere"}
+  - {address: 9,  name: cooling_water_temp,   source: cooling_water_temp, type: uint16, scale: 10,  unit: degC}
+  - {address: 10, name: haul_off_speed,       source: haul_off_speed,     type: uint16, scale: 100, unit: m/min}
+  - {address: 11, name: throughput,           source: throughput,         type: uint16, scale: 10,  unit: kg/h}
+  - {address: 12, name: power_consumption,    source: power,              type: uint16, scale: 10,  unit: kW}
+  - {address: 13, name: pipe_outer_diameter,  source: pipe_od,            type: uint16, scale: 100, unit: mm, description: "at the gauge, 0 = no pipe yet"}
+  - {address: 14, name: pipe_wall_thickness,  source: wall_thickness,     type: uint16, scale: 100, unit: mm, description: "at the gauge, 0 = no pipe yet"}
+  - {address: 15, name: active_fault_code,    source: fault_code,         type: uint16, scale: 1,   unit: code, description: "0 = none"}
+  - {address: 16, name: total_produced_length, source: total_length,      type: uint32, scale: 10,  unit: m}
+  - {address: 18, name: total_produced_weight, source: total_weight,      type: uint32, scale: 10,  unit: kg}
+  - {address: 20, name: motor_load,           source: motor_load,         type: uint16, scale: 10,  unit: "%"}
+  - {address: 21, name: melt_temp,            source: melt_temp,          type: uint16, scale: 10,  unit: degC}
+  - {address: 22, name: melt_pressure_f32,    source: melt_pressure,      type: float32, scale: 1,  unit: bar, description: "FLOAT32 example, unscaled"}
+  - {address: 24, name: sim_time,             source: sim_time,           type: uint32, scale: 1,   unit: s}
+  - {address: 26, name: alarm_word,           source: alarm_word,         type: uint16, scale: 1,   unit: bits, description: "bit n = DI 5+n; see docs/faults/fault-table.md"}
+  - {address: 27, name: active_scenario,      source: scenario,           type: uint16, scale: 1,   unit: code, description: "injected fault cause, 0 = none"}
+  - {address: 28, name: last_fault_code,      source: last_fault_code,    type: uint16, scale: 1,   unit: code, description: "kept after reset"}
+
+discrete_inputs: # FC02, read-only
+  - {address: 0, name: running,         source: running}
+  - {address: 1, name: heating,         source: heating}
+  - {address: 2, name: fault_active,    source: fault}
+  - {address: 3, name: emergency_stop_active, source: emergency_stop}
+  - {address: 4, name: target_reached,  source: target_reached}
+  # Alarm bits: set while the condition is beyond its warning limit.
+  - {address: 5,  name: alarm_motor_overload,     source: alarm_motor_overload}
+  - {address: 6,  name: alarm_melt_pressure_high, source: alarm_melt_pressure_high}
+  - {address: 7,  name: alarm_zone_temp_high,     source: alarm_zone_temp_high}
+  - {address: 8,  name: alarm_zone_temp_low,      source: alarm_zone_temp_low}
+  - {address: 9,  name: alarm_cooling_water_high, source: alarm_cooling_water_high}
+  - {address: 10, name: alarm_vacuum_low,         source: alarm_vacuum_low}
+  - {address: 11, name: alarm_haul_off_deviation, source: alarm_haul_off_deviation}
+  - {address: 12, name: alarm_sensor_failure,     source: alarm_sensor_failure}
+  - {address: 13, name: alarm_emergency_stop,     source: alarm_emergency_stop}
+
+holding_registers: # FC03 / FC06 / FC16; out-of-range writes -> exception 03
+  - {address: 0, name: extruder_rpm_sp,    setpoint: extruder_rpm,   type: uint16, scale: 10,  unit: rpm,   min: 0, max: 150}
+  - {address: 1, name: zone1_temp_sp,      setpoint: zone1_temp,     type: uint16, scale: 10,  unit: degC,  min: 0, max: 260}
+  - {address: 2, name: zone2_temp_sp,      setpoint: zone2_temp,     type: uint16, scale: 10,  unit: degC,  min: 0, max: 260}
+  - {address: 3, name: zone3_temp_sp,      setpoint: zone3_temp,     type: uint16, scale: 10,  unit: degC,  min: 0, max: 260}
+  - {address: 4, name: die_temp_sp,        setpoint: die_temp,       type: uint16, scale: 10,  unit: degC,  min: 0, max: 260}
+  - {address: 5, name: haul_off_speed_sp,  setpoint: haul_off_speed, type: uint16, scale: 100, unit: m/min, min: 0, max: 30}
+  - {address: 6, name: production_target,  setpoint: production_target_length, type: uint32, scale: 10, unit: m, description: "0 = no target; write both words with FC16"}
+  - {address: 8, name: fault_scenario,     scenario: true,           type: uint16, unit: code,  description: "inject a fault cause 1..8; 0 = repaired (docs/faults/fault-table.md)"}
+
+coils: # FC01 / FC05 / FC15 (ADR-0003)
+  - {address: 0, name: start,          command: start,          description: "write 1; returns to 0 once processed"}
+  - {address: 1, name: stop,           command: stop,           description: "write 1; returns to 0 once processed; wins over start"}
+  - {address: 2, name: reset_fault,    command: reset_fault,    description: "write 1; returns to 0 once processed"}
+  - {address: 3, name: emergency_stop, command: emergency_stop, description: "maintained: 1 = pressed; release + reset to recover"}

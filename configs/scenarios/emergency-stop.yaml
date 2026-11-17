@@ -1,0 +1,11 @@
+# E-Stop is maintained: the reset is refused while it is pressed.
+scenario:
+  name: emergency-stop
+  description: E-Stop during production, refused reset, release, reset, restart.
+  events:
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 1500, action: emergency_stop}
+    - {at_seconds: 1530, action: reset_fault}
+    - {at_seconds: 1560, action: release_emergency_stop}
+    - {at_seconds: 1570, action: reset_fault}
+    - {at_seconds: 1580, action: start_machine}

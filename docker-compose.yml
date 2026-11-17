@@ -1,0 +1,66 @@
+# Full stack: Modbus simulator -> collector -> TimescaleDB -> dashboard.
+#   cp .env.example .env   (optional)
+#   docker compose up -d --build
+# Dashboard: http://localhost:8080   Modbus TCP: localhost:1502
+name: modbus-simulator
+
+services:
+  simulator:
+    build: .
+    restart: unless-stopped
+    command:
+      - -addr=0.0.0.0:1502
+      - -lines=${SIM_LINES:-3}
+      - -time-scale=${SIM_TIME_SCALE:-1}
+      - -scenario=${SIM_SCENARIO:-}
+      - -log-format=json
+    ports:
+      - "127.0.0.1:${MODBUS_PORT:-1502}:1502"
+
+  db:
+    image: timescale/timescaledb:2.17.2-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-collector}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-collector}
+      POSTGRES_DB: ${POSTGRES_DB:-machine}
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  collector:
+    build: ./collector
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      simulator:
+        condition: service_started
+    environment:
+      MODBUS_ADDR: simulator:1502
+      UNIT_IDS: ${UNIT_IDS:-1,2,3}
+      POLL_INTERVAL: ${POLL_INTERVAL:-1s}
+      MODBUS_TIMEOUT: 2s
+      DATABASE_URL: postgres://${POSTGRES_USER:-collector}:${POSTGRES_PASSWORD:-collector}@db:5432/${POSTGRES_DB:-machine}?sslmode=disable
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+  dashboard:
+    build: ./dashboard
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${DASHBOARD_PORT:-8080}:8080"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-collector}:${POSTGRES_PASSWORD:-collector}@db:5432/${POSTGRES_DB:-machine}?sslmode=disable
+      POLL_INTERVAL: ${DASHBOARD_POLL_INTERVAL:-1s}
+
+volumes:
+  dbdata:

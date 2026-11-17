@@ -1,0 +1,18 @@
+# Cold start-up with a soak step, as practised for heavy barrels: heat to
+# 120 °C first, hold, then go to production temperatures. The cold-start
+# interlock (min_run_temp, 160 °C for HDPE) keeps the screw from starting
+# during the soak although the zones are at their (soak) setpoints.
+scenario:
+  name: cold-startup
+  description: Two-stage heat-up (soak at 120 °C, then production temperatures).
+  events:
+    - {at_seconds: 0,    action: set_zone_temp, zone: "1", value: 120}
+    - {at_seconds: 0,    action: set_zone_temp, zone: "2", value: 120}
+    - {at_seconds: 0,    action: set_zone_temp, zone: "3", value: 120}
+    - {at_seconds: 0,    action: set_zone_temp, zone: die, value: 120}
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 900,  action: note, message: "soak at 120 °C"}
+    - {at_seconds: 1200, action: set_zone_temp, zone: "1", value: 180}
+    - {at_seconds: 1200, action: set_zone_temp, zone: "2", value: 190}
+    - {at_seconds: 1200, action: set_zone_temp, zone: "3", value: 200}
+    - {at_seconds: 1200, action: set_zone_temp, zone: die, value: 205}

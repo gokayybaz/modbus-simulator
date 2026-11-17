@@ -1,0 +1,63 @@
+# Example configuration: three lines behind one Modbus TCP endpoint.
+#
+#   go run ./cmd/simulator -config configs/simulator.example.yaml
+#   go run ./cmd/simulator -config configs/simulator.example.yaml -validate
+#
+# Every key is optional except version and, per line, preset. Explicit
+# command-line flags override this file. Relative paths are relative to this
+# file. Reference: docs/configuration.md
+version: 1
+
+server:
+  addr: 127.0.0.1:1502
+  unit_id: 1            # unit id of the first line (unit isolation: +1 per line)
+  isolation: unit       # unit | port (port: one TCP port per line, port + line - 1)
+  accept_any_unit: false
+  max_clients: 32
+  idle_timeout: 60s
+  shutdown_timeout: 5s
+
+log:
+  level: info           # debug | info | warn | error
+  format: text          # text | json
+
+simulation:
+  period: 500ms         # fixed timestep
+  time_scale: 1         # 1..1000, simulated time runs this much faster
+  seed: 1               # line i uses seed + i - 1 unless it sets its own
+
+# register_map: register-map.yaml   # default for all lines (omit = embedded map)
+# scenario: normal-production       # default for all lines (built-in name or file)
+
+lines:
+  - name: extruder-a
+    preset: hdpe-110
+    scenario: normal-production
+
+  - name: extruder-b
+    preset: hdpe-63
+    # Different noise: a worn thermocouple set and a noisier pressure transducer.
+    noise:
+      temperature: {sigma: 0.6, drift_step: 0.02, drift_max: 1.0}
+      melt_pressure: {sigma: 2.0, non_negative: true, zero_at_zero: true}
+
+  - name: pvc-line
+    preset: pvc-110
+    # PVC degrades when overheated: narrower writable temperatures.
+    setpoint_limits:
+      zone1_temp: {min: 0, max: 200}
+      zone2_temp: {min: 0, max: 200}
+      zone3_temp: {min: 0, max: 205}
+      die_temp: {min: 0, max: 210}
+    setpoints:
+      extruder_rpm: 28
+    # Partial process overrides: only the given keys change.
+    process:
+      cooling:
+        flow_rate: 12          # m³/h
+      melt:
+        nominal_pressure: 260  # bar
+    # Tighter protection for the PVC die head.
+    fault_limits:
+      melt_pressure_high: {warning: 290, trip: 330, delay: 1s}
+      zone_temp_high: {warning: 8, trip: 15, delay: 30s}

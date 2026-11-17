@@ -1,0 +1,9 @@
+# Production stop (heaters off) and restart: counters keep their values and
+# continue; the warm barrel re-heats faster than from cold.
+scenario:
+  name: stop-restart
+  description: Planned stop after 25 min, restart 10 min later.
+  events:
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 1500, action: stop_machine}
+    - {at_seconds: 2100, action: start_machine}

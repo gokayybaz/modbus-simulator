@@ -1,0 +1,10 @@
+# Normal production of the reference line (hdpe-110): start from cold, reach
+# RUNNING after ~18 min, produce, then a production target of 100 m more.
+scenario:
+  name: normal-production
+  description: Start, heat up, produce at nominal settings, set a production target.
+  events:
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 1500, action: note, message: "steady production expected"}
+    - {at_seconds: 1800, action: set_production_target, value: 100}
+    - {at_seconds: 3600, action: note, message: "one hour of simulated time"}

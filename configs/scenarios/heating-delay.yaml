@@ -1,0 +1,11 @@
+# A burned-out zone 1 heater during heat-up: the line stays in HEATING (no
+# trip, the low-temperature protection is only active in RUNNING) until the
+# heater is repaired; then heat-up completes.
+scenario:
+  name: heating-delay
+  description: Zone 1 heater fails during heat-up and is repaired after 25 min.
+  events:
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 300,  action: inject_cause, cause: zone1_heater_failure}
+    - {at_seconds: 1800, action: clear_cause}
+    - {at_seconds: 1800, action: note, message: "heater repaired"}

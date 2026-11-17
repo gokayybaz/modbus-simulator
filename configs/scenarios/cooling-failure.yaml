@@ -1,0 +1,9 @@
+scenario:
+  name: cooling-failure
+  description: Cooling water flow drops to 15 % → cooling water high (40), repair, reset, restart.
+  events:
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 1500, action: inject_cause, cause: cooling_water_failure}
+    - {at_seconds: 2000, action: clear_cause}
+    - {at_seconds: 2300, action: reset_fault}
+    - {at_seconds: 2310, action: start_machine}

@@ -1,0 +1,13 @@
+# Higher output raises the melt pressure; a clogging screen pack then pushes
+# it over the trip limit. Repair (screen change), reset and restart.
+scenario:
+  name: pressure-increase
+  description: 130 rpm, then screen pack clogging → melt pressure high (11), repair, restart.
+  events:
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 1500, action: set_extruder_rpm, value: 130}
+    - {at_seconds: 1800, action: inject_cause, cause: screen_pack_clogging}
+    - {at_seconds: 2100, action: clear_cause}
+    - {at_seconds: 2200, action: reset_fault}
+    - {at_seconds: 2210, action: set_extruder_rpm, value: 100}
+    - {at_seconds: 2210, action: start_machine}

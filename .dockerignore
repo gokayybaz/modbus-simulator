@@ -1,0 +1,10 @@
+.git
+**/node_modules
+**/dist
+collector
+dashboard
+spikes
+docs
+*.md
+/simulator
+.env

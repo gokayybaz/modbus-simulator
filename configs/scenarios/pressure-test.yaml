@@ -1,0 +1,18 @@
+# The example from the project brief, verbatim. inject_fault trips the line
+# directly (TriggerFault); compare screen-pack-clogging for a physical cause.
+# Note: at 120 s the line is still HEATING (heat-up takes ~18 min), so the
+# rpm change only becomes visible once it runs. See normal-production for
+# timings that match the heat-up.
+scenario:
+  name: pressure-test
+  events:
+    - at_seconds: 10
+      action: start_machine
+
+    - at_seconds: 60
+      action: set_extruder_rpm
+      value: 80
+
+    - at_seconds: 120
+      action: inject_fault
+      fault: melt_pressure_high

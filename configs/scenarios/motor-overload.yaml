@@ -1,0 +1,9 @@
+scenario:
+  name: motor-overload
+  description: Screw blockage → extruder motor overload (10), repair, reset, restart.
+  events:
+    - {at_seconds: 0,    action: start_machine}
+    - {at_seconds: 1500, action: inject_cause, cause: screw_blockage}
+    - {at_seconds: 1800, action: clear_cause}
+    - {at_seconds: 1850, action: reset_fault}
+    - {at_seconds: 1860, action: start_machine}
